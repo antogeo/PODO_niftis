@@ -24,20 +24,46 @@ This is an early, personal project. Expect rough edges.
   - A brush for manual edits, with an eraser, adjustable radius and optional 3D.
   - Edits are undoable. Masks save as NIfTI label images on the first image's grid.
 
-## Build and run
+## Download
 
-You need a recent Rust toolchain (edition 2024).
+Pre-built versions are attached to each release on the
+[Releases page](https://github.com/antogeo/PODO_niftis/releases) (once a release has been published).
+Download the file for your system, unpack it and run `PODO_niftis`:
+
+| System | File to download | How to run |
+|---|---|---|
+| Linux (x86_64) | `PODO_niftis-<version>-x86_64-unknown-linux-gnu.tar.gz` | `tar xzf` the file, then `./PODO_niftis` |
+| macOS, Apple silicon (M1 and later) | `PODO_niftis-<version>-aarch64-apple-darwin.tar.gz` | `tar xzf` the file, then `./PODO_niftis` |
+| macOS, Intel | `PODO_niftis-<version>-x86_64-apple-darwin.tar.gz` | `tar xzf` the file, then `./PODO_niftis` |
+| Windows (x86_64) | `PODO_niftis-<version>-x86_64-pc-windows-msvc.zip` | Unzip, then double-click `PODO_niftis.exe` |
+
+The downloads are not code-signed, so your system may warn you the first time:
+
+- **macOS:** "cannot be opened because the developer cannot be verified". Right-click the app, choose
+  **Open**, and confirm. If it is still blocked, run `xattr -d com.apple.quarantine PODO_niftis` once in
+  the unpacked folder.
+- **Windows:** SmartScreen shows "Windows protected your PC". Click **More info**, then **Run anyway**.
+- **Linux:** you need a normal desktop with OpenGL and X11 or Wayland. The Open and Save dialogs use the
+  desktop's file-chooser portal (or GTK), which most desktops already provide.
+
+You can also start it from a terminal with images as arguments, for example
+`./PODO_niftis scan.nii.gz overlay.nii.gz:colormap=hot:opacity=0.5`, or drag files onto the window.
+
+## Build from source
+
+You need a recent Rust toolchain (edition 2024). On Linux you also need the usual windowing and OpenGL
+development libraries (for example on Debian/Ubuntu: `libxkbcommon-dev libwayland-dev libx11-dev
+libxcursor-dev libxrandr-dev libxi-dev libgl1-mesa-dev libegl1-mesa-dev`).
 
 ```
+git clone git@github.com:antogeo/PODO_niftis.git
+cd PODO_niftis
 cargo build --release
 ./target/release/PODO_niftis your_image.nii.gz [overlay.nii.gz[:colormap=hot:opacity=0.5]] ...
 ```
 
-You can also use **Open...** or drag files onto the window. Run the tests with `cargo test`. They use synthetic images generated in code.
-
-Pre-built downloads for Linux, macOS and Windows are on the Releases page when available. They are not
-code-signed, so macOS and Windows will warn about an unidentified developer (macOS: right-click the app and
-choose Open; Windows: More info, then Run anyway).
+You can also use **Open...** or drag files onto the window. Run the tests with `cargo test`. They use
+synthetic images generated in code.
 
 ## Controls
 
