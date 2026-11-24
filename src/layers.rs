@@ -762,9 +762,15 @@ pub struct ImageArg {
 }
 
 pub fn parse_arg(s: &str) -> Result<ImageArg, String> {
-    let mut parts = s.split(':');
-    let mut a = ImageArg { path: parts.next().unwrap_or("").to_string(), ..Default::default() };
-    for p in parts {
+    // A Windows drive prefix ("C:\..." or "C:/...") belongs to the path; it is not an option separator.
+    let b = s.as_bytes();
+    let skip = if b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && (b[2] == b'\\' || b[2] == b'/') { 2 } else { 0 };
+    let (path, opts) = match s[skip..].find(':') {
+        Some(i) => (&s[..skip + i], &s[skip + i + 1..]),
+        None => (s, ""),
+    };
+    let mut a = ImageArg { path: path.to_string(), ..Default::default() };
+    for p in opts.split(':').filter(|p| !p.is_empty()) {
         let (k, v) = p.split_once('=').ok_or_else(|| format!("bad option '{p}' (expected key=value)"))?;
         let num = |v: &str| v.parse::<f32>().map_err(|_| format!("bad number '{v}' for {k}"));
         match k {
@@ -853,6 +859,18 @@ mod tests {
         assert_eq!(Colormap::Hot.lut()[255], [255, 255, 255]);
         assert_eq!(Colormap::Viridis.lut()[0], [68, 1, 84]);
         assert_eq!(Colormap::Viridis.lut()[255], [253, 231, 37]);
+    }
+
+    #[test]
+    fn parse_args_with_windows_paths() {
+        let a = parse_arg(r"C:\Users\me\scan.nii.gz").unwrap();
+        assert_eq!(a.path, r"C:\Users\me\scan.nii.gz");
+        let a = parse_arg(r"C:\scans\a.nii.gz:colormap=hot:opacity=0.5").unwrap();
+        assert_eq!(a.path, r"C:\scans\a.nii.gz");
+        assert_eq!((a.colormap, a.opacity), (Some(Colormap::Hot), Some(0.5)));
+        assert_eq!(parse_arg("d:/x/y.nii:min=2").unwrap().path, "d:/x/y.nii");
+        // a relative path with a one-letter name and an option is still an option, not a drive
+        assert_eq!(parse_arg("a:colormap=hot").unwrap().path, "a");
     }
 
     #[test]
